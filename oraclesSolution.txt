@@ -1,0 +1,509 @@
+ORACLE LAB SOLUTION
+1.1
+
+1. SELECT staff_name AS "Name",design_code AS "Code" FROM staff_master WHERE hiredate<'01-Jan-2003' AND staff_sal BETWEEN 12000 AND 25000;
+
+2. SELECT staff_code, staff_name, dept_code,hiredate FROM staff_master WHERE ((sysdate-hiredate)/365 > 17) ORDER BY hiredate;
+
+3. SELECT * FROM staff_master WHERE mgr_code IS NULL;
+
+4. SELECT * FROM book_master WHERE book_pub_year BETWEEN 2001 AND 2004 AND book_name LIKE '%&%';
+
+5. SELECT staff_name FROM staff_master WHERE staff_name LIKE '%"_"%';
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+2.1
+
+1.SQL> SELECT staff_name, lpad(staff_sal,15,'$') AS Salary FROM staff_master;
+
+2. SQL> SELECT student_name, to_char(student_dob,'Month, DD YYYY') FROM student_master WHERE to_char(student_dob,'DY') = 'SAT' OR to_char(student_dob,'DY') = 'SUN';
+
+3.SQL> SELECT staff_name, ROUND(MONTHS_BETWEEN(sysdate, hiredate)) AS "Months Worked" FROM staff_master ORDER BY hiredate;
+
+4.SQL>  SELECT * FROM staff_master WHERE TO_NUMBER(TO_CHAR(hiredate, 'DD')) BETWEEN 1 AND 15 AND to_char(hiredate,'MON')= 'DEC';
+
+5. SQL> SELECT staff_name, staff_sal,
+  2  CASE
+  3  WHEN staff_sal >= 50000 THEN 'A'
+  4  WHEN staff_sal >25000 AND staff_sal<50000 THEN 'B'
+  5  WHEN staff_sal >10000 AND staff_sal<25000 THEN 'C'
+  6  ELSE
+  7  'D'
+  8  END CASE FROM staff_master;
+
+6. SQL> SELECT staff_name, hiredate, to_char(hiredate,'DY') AS DAY FROM staff_master ORDER BY mod(to_char(hiredate, 'D') + 5, 7);
+
+OR
+SQL> SELECT staff_name, hiredate, to_char(hiredate,'DY') AS DAY FROM staff_master ORDER BY (to_char(hiredate - 1, 'D')) ;
+
+7. SQL> SELECT instr('Mississippi','i',1,3) FROM dual;
+
+8. SQL> SELECT to_char(next_day(last_day(sysdate) - interval '7' DAY, 'FRIDAY'), 'ddth Month, YYYY') AS PAYDATE FROM dual;
+
+9. SQL> SELECT student_code, student_name,  DECODE(dept_code,20,'Electricals',30,'Electronics', 'Others') AS "Dept Name" FROM student_master;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+2.2
+
+1. SQL> SELECT max(staff_sal) AS "Maximum Data", min(staff_sal) AS "Minimum", count(*) as Total, avg(staff_sal) as Average, sum(staff_sal) AS Sum FROM staff_master;
+
+2. SELECT deptno, count(job) FROM emp WHERE job = 'MANAGER' group by deptno;
+
+3. SQL> SELECT deptno, sum(sal) FROM emp WHERE job != 'MANAGER' group by deptno having sum(sal)>20000;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+3.1
+
+1. SQL> SELECT s.staff_name, s.dept_code, d.dept_name FROM staff_master s, department_master d WHERE s.dept_code = d.dept_code AND staff_sal > 20000;
+
+2. SQL> SELECT  s.staff_code AS staff# , s.staff_name AS staff, d.dept_name , s.mgr_code AS mgr#, m.staff_name AS Manager FROM staff_master s, department_master d, staff_master m WHERE s.dept_code = d.dept_code AND s.mgr_code = m.staff_code;
+
+3. SQL> SELECT b.student_code, s.student_name, b.book_code, bm.book_name FROM student_master s, book_transactions b, book_master bm WHERE b.student_code= s.student_code AND b.book_code=bm.book_code AND b.book_expected_return_date = sysdate;
+
+OR SQL> SELECT b.student_code, s.student_name, b.book_code, bm.book_name FROM student_master s, book_transactions b, book_master bm WHERE b.student_code= s.student_code AND b.book_code=bm.book_code AND b.book_expected_return_date = '09-FEB-11';
+
+4. SQL> SELECT s.staff_code, s.staff_name, dep.dept_name, d.design_name, b.book_code, b.book_name, bt.book_issue_date
+  2  FROM staff_master s, designation_master d, book_master b, book_transactions bt, department_master dep
+  3  WHERE bt.staff_code = s.staff_code
+  4  AND s.design_code = d.design_code
+  5  AND bt.book_code = b.book_code
+  6  AND bt.book_issue_date >= ADD_MONTHS('28-JUL-11', -30);
+
+5. SQL> SELECT s.staff_code, s.staff_name, d.design_name, dep.dept_name, b.book_code, b.book_name, b.book_pub_author
+  2  , 5*(to_date(sysdate, 'DD-MON-YY') - bt.book_expected_return_date) AS FINE
+  3  FROM staff_master s, designation_master d, book_master b, book_transactions bt, department_master dep
+  4  WHERE bt.staff_code = s.staff_code
+  5  AND s.design_code = d.design_code
+  6  AND bt.book_code = b.book_code
+  7  AND s.dept_code = dep.dept_code;
+
+6. SQL> SELECT staff_code, staff_name, staff_sal
+  2  FROM staff_master
+  3  WHERE staff_sal<(SELECT AVG(staff_sal) FROM staff_master);
+
+7.
+SQL> SELECT book_pub_author, book_name FROM book_master WHERE book_pub_author IN(SELECT book_pub_author FROM book_master GROUP BY book_pub_author HAVING COUNT(book_pub_author)>1)
+  2  ;
+
+9. SQL> SELECT s.student_code, s.student_name, d.dept_name FROM student_master s, department_master d
+  2  WHERE s.dept_code = d.dept_code
+  3  AND s.dept_code = (SELECT dept_code FROM student_master GROUP BY dept_code HAVING COUNT(dept_code)> ANY(SELECT COUNT(dept_code) FROM student_master GROUP BY dept_code ));
+
+10. SQL> SELECT s.staff_code, s.staff_name , d.dept_name, des.design_name
+  2  FROM staff_master s, designation_master des, department_master d
+  3  WHERE s.design_code = des.design_code AND s.dept_code = d.dept_code
+  4  AND hiredate > ADD_MONTHS(sysdate, -3);
+
+12. SQL> SELECT *
+  2  FROM book_transactions
+  3  WHERE TO_CHAR(book_expected_return_date, 'DD-MON-YYYY') = (SELECT TO_CHAR(NEXT_DAY(sysdate, 'MONDAY') - 7, 'DD-MON-YYYY') FROM dual);
+
+13. SQL> SELECT s.dept_code, d.dept_name, COUNT(*) AS number_of_people
+  2  FROM staff_master s, department_master d
+  3  WHERE s.dept_code = d.dept_code
+  4  GROUP BY s.dept_code, d.dept_name;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+4.1
+
+1. SQL> create table Customer(Customerid number(5), Cust_Name varchar2(20),Address1 varchar2(30), Address2 varchar2(30));
+
+Table created.
+
+2. SQL> ALTER TABLE Customer MODIFY(Cust_Name varchar2(30) NOT NULL);
+
+Table altered.
+
+3. 
+(a) SQL> ALTER TABLE Customer ADD (Gender varchar2(1), Age Number(3), PhoneNo Number(10));
+
+Table altered.
+(b) SQL> ALTER TABLE Customer RENAME TO Cust_Table;
+
+Table altered.
+4. SQL> INSERT INTO Cust_Table VALUES(1001, 'George','#116France', '#116France','M',25,434524);
+
+1 row created.
+
+SQL> INSERT INTO Cust_Table VALUES(1002, 'Becker','#114NewYork', '#114NewYork','M',25,431525);
+
+1 row created..
+SQL> INSERT INTO Cust_Table VALUES(1000, 'Allen','#115Chicago', '#115Chicago','M',25,7878776) ;
+
+1 row created.
+
+5. SQL> ALTER TABLE Cust_Table ADD CONSTRAINT CustId_Prim PRIMARY KEY (CustomerId);
+
+Table altered.
+
+6. SQL> INSERT INTO Cust_Table VALUES(1002, 'John','#114Chicago', '#114Chicago','M',45,439525);
+INSERT INTO Cust_Table VALUES(1002, 'John','#114Chicago', '#114Chicago','M',45,439525)
+*
+ERROR at line 1:
+ORA-00001: unique constraint (SYSTEM.CUSTID_PRIM) violated
+
+7.SQL> ALTER TABLE Cust_Table DISABLE CONSTRAINT CustId_Prim;
+
+Table altered.
+
+SQL> INSERT INTO Cust_Table VALUES(1002, 'Becker','#114NewYork', '#114New York','M',45,431525);
+
+1 row created.
+
+SQL> INSERT INTO Cust_Table VALUES(1003, 'Nanapatekar','#115India', '#115India','M',45,431525);
+
+1 row created
+
+8. SQL> ALTER TABLE Cust_Table ENABLE CONSTRAINT CustId_Prim;
+ALTER TABLE Cust_Table ENABLE CONSTRAINT CustId_Prim
+*
+ERROR at line 1:
+ORA-02437: cannot validate (SYSTEM.CUSTID_PRIM) - primary key violated
+
+9. SQL> ALTER TABLE Cust_Table DROP CONSTRAINT CustId_Prim;
+
+Table altered.
+SQL> INSERT INTO Cust_Table VALUES(1003, 'Nanapatekar','#115India', '#115India','M',45,431525);
+
+1 row created.
+
+SQL> INSERT INTO Cust_Table VALUES(1002, 'Becker','#114NewYork', '#114NewYork','M',45,431525);
+
+1 row created.
+
+10. SQL> TRUNCATE TABLE Cust_Table;
+
+Table truncated.
+
+11. SQL> ALTER TABLE Cust_Table ADD E_mail varchar2(25);
+
+Table altered.
+
+12. SQL> ALTER TABLE Cust_Table DROP COLUMN E_mail;
+
+Table altered.
+
+13. SQL> CREATE TABLE Suppliers AS SELECT CustomerID, Cust_Name, Address1, Address2, PhoneNo FROM Cust_Table;
+
+Table created.
+
+14. SQL> CREATE TABLE CustomerMaster
+(CustomerId Number(5) CONSTRAINT CustID_PK PRIMARY KEY,
+CustomerName VARCHAR2(30) NOT NULL, 
+Address1 VARCHAR2(30) NOT NULL,
+Address2 VARCHAR2(30), 
+Gender VARCHAR(1), 
+Age Number(3), 
+Phone Number(10));
+
+Table created.
+15. SQL> CREATE TABLE AccountsMaster
+  2  (CustomerId Number(5),
+  3  AccountNumber(10,2) CONSTRAINT Acc_PK PRIMARY KEY,
+  4  AccountType Char(3),
+  5  LedgerBalance Number(10,2) NOT NULL);
+
+Table created.
+
+SQL> CREATE SEQUENCE Acc_No
+  2  START WITH 101
+  3  INCREMENT BY 1;
+
+Sequence created.
+
+16. SQL> ALTER TABLE AccountsMaster
+  2  ADD CONSTRAINT Cust_acc
+  3  FOREIGN KEY(CustomerId)
+  4  REFERENCES CustomerMaster(CustomerId);
+
+Table altered.
+
+17. 
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(1000,'Allen','#115 Chicago','#115 Chicago', 'M', 25, 7878776);
+
+1 row created.
+
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(1001,'George','#116 France','#116 France', 'M', 25, 434524);
+
+1 row created.
+
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(1002,'Becker','#114 New York','#114 New York', 'M', 45, 431525);
+
+1 row created.
+
+18. SQL> ALTER TABLE AccountsMaster
+  2  ADD CONSTRAINT CHK_AccType
+  3  CHECK(AccountType='NRI' OR AccountType = 'IND');
+
+Table altered.
+
+19. SQL> ALTER TABLE AccountsMaster
+  2  ADD CONSTRAINT Balance_Check
+  3  CHECK(LedgerBalance>5000);
+
+Table altered.
+
+20. SQL> DELETE FROM accountsmaster WHERE EXISTS (SELECT c.customername FROM customermaster c WHERE c.customerid = accountsmaster.customerid);
+
+0 rows deleted.
+
+SQL> DELETE FROM accountsmaster WHERE EXISTS (SELECT c.customername FROM customermaster c WHERE c.customerid = accountsmaster.customerid AND customerid = 1000);
+
+0 rows deleted
+
+21. SQL> CREATE TABLE AccountDetails AS
+  2  SELECT * FROM AccountsMaster;
+
+Table created.
+
+22. SQL> CREATE VIEW Acc_view AS (SELECT c.customerid AS customercode, t.customername AS accountholdername, c.accountnumber, c.accounttype AS Type , c.ledgerbalance AS Balance FROM AccountsMaster c, Customermaster t WHERE c.customerid = t.customerid);
+
+View created.
+
+SQL> CREATE VIEW Acc_view AS
+  2  SELECT CustomerId AS CustomerCode,
+  3  AccountNumber AS AccountNumber, AccountType AS Type,
+  4  LedgerBalance AS Balance
+  5  FROM AccountsMaster;
+
+View created.
+
+23.SQL> CREATE VIEW vAccs_Dtls AS
+  2  SELECT AccountType, LedgerBalance
+  3  FROM AccountsMaster
+  4  WHERE AccountType = 'IND' AND LedgerBalance > 10000;
+
+View created.
+
+24. SQL> CREATE VIEW accsvw10 AS
+  2  SELECT * FROM ACcountsMaster
+  3  WITH READ ONLY CONSTRAINT my_view_read_only;
+
+View created.
+
+25. SQL> CREATE SEQUENCE sequ_dept
+  2  MINVALUE 40
+  3  START WITH 40
+  4  INCREMENT BY 10
+  5  MAXVALUE 200;
+
+Sequence created.
+
+26. SQL> CREATE TABLE Department_Masters
+  2  (DeptNo Number(5));
+
+Table created.
+
+SQL> INSERT INTO Department_masters(DeptNo)
+  2  VALUES (sequ_dept.nextVal);
+
+1 row created.
+
+SQL> INSERT INTO Department_masters(DeptNo)
+  2  VALUES (sequ_dept.nextVal);
+
+1 row created.
+
+SQL> INSERT INTO Department_masters(DeptNo)
+  2  VALUES (sequ_dept.nextVal);
+
+1 row created.
+
+SQL> select * from Department_masters;
+
+27. SQL> DROP SEQUENCE sequ_dept;
+
+Sequence dropped.
+
+28. SQL> CREATE INDEX no_name on emp(empno);
+
+Index created.
+
+SQL> SELECT * FROM EMP;
+
+
+29. SQL> CREATE SYNONYM synEmp FOR emp;
+
+Synonym created.
+
+30. SQL> select * from synEmp;
+
+31. CREATE INDEX idx_emp_hiredate ON Employee(hiredate);
+
+32. SQL> CREATE SEQUENCE seq_emp
+  2  MINVALUE 1001
+  3  START WITH 1001
+  4  INCREMENT BY 1
+  5  CACHE 1001;
+
+Sequence created.
+---------------------------------------------------------------------------------------------------------------------------------------------
+5.1
+1. CREATE TABLE employee as SELECT * from emp WHERE 1=3;
+
+Table created.
+
+SQL> desc employee;
+ Name                                      Null?    Type
+ ----------------------------------------- -------- ----------------------------
+ EMPNO                                     NOT NULL NUMBER(4)
+ ENAME                                              VARCHAR2(10)
+ JOB                                                VARCHAR2(9)
+ MGR                                                NUMBER(4)
+ HIREDATE                                           DATE
+ SAL                                                NUMBER(7,2)
+ COMM                                               NUMBER(7,2)
+ DEPTNO                                             NUMBER(2)
+
+2. 
+SQL> INSERT INTO employee(empno, ename, sal,deptno) select empno,ename,sal,deptno from emp;
+
+14 rows created.
+
+3. SQL> UPDATE emp SET job=(SELECT job FROM emp WHERE empno = 7788),
+  2  deptno=(SELECT  deptno FROM emp WHERE empno = 7788)
+  3  WHERE empno=7698;
+
+1 row updated
+
+4. SQL> DELETE FROM department_master
+  2  WHERE dept_name = 'SALES';
+
+0 rows deleted.
+OR
+SQL> DELETE FROM department_master
+  2  WHERE dept_name LIKE '%SALES%';
+
+5. SQL> UPDATE emp SET deptno=(SELECT deptno FROM emp WHERE empno = 7788) WHERE empno = 7698;
+
+1 row updated.
+
+SQL> UPDATE employee SET deptno=(SELECT deptno FROM emp WHERE empno = 7788) WHERE empno = 7698;
+
+1 row updated.
+
+6. SQL> INSERT INTO employee
+  2  VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno);
+Enter value for empid: 1000
+Enter value for ename: Allen
+Enter value for job: Clerk
+Enter value for mgr: 1001
+Enter value for hiredate: 12-JAN-01
+Enter value for sal: 3000
+Enter value for comm: 2
+Enter value for deptno: 10
+old   2: VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno)
+new   2: VALUES(1000,'Allen','Clerk','1001','12-JAN-01',3000,2,10)
+
+1 row created.
+
+SQL> INSERT INTO employee
+  2  VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno);
+Enter value for empid: 1001
+Enter value for ename: George
+Enter value for job: Analyst
+Enter value for mgr:
+Enter value for hiredate: 08-SEP-92
+Enter value for sal: 5000
+Enter value for comm: 0
+Enter value for deptno: 10
+old   2: VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno)
+new   2: VALUES(1001,'George','Analyst','','08-SEP-92',5000,0,10)
+
+1 row created.
+
+SQL> INSERT INTO employee
+  2  VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno);
+Enter value for empid: 1002
+Enter value for ename: Becker
+Enter value for job: Manager
+Enter value for mgr: 1000
+Enter value for hiredate: 04-Nov-92
+Enter value for sal: 2800
+Enter value for comm: 4
+Enter value for deptno: 20
+old   2: VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno)
+new   2: VALUES(1002,'Becker','Manager','1000','04-Nov-92',2800,4,20)
+
+1 row created.
+
+SQL> INSERT INTO employee
+  2  VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno);
+Enter value for empid: 1003
+Enter value for ename: Bill
+Enter value for job: Clerk
+Enter value for mgr: 1002
+Enter value for hiredate: 04-Nov-92
+Enter value for sal: 3000
+Enter value for comm: 0
+Enter value for deptno: 20
+old   2: VALUES(&empid,'&ename','&job','&mgr','&hiredate',&sal,&comm,&deptno)
+new   2: VALUES(1003,'Bill','Clerk','1002','04-Nov-92',3000,0,20)
+
+1 row created.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+6.1
+1. SQL> ALTER TABLE CustomerMaster
+  2  ADD Salary Number(10);
+
+Table altered.
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary);
+Enter value for customerid: 6000
+Enter value for customername: John
+Enter value for address1: #115Chicago
+Enter value for address2: #115Chicago
+Enter value for gender: M
+Enter value for age: 25
+Enter value for phone: 7878776
+Enter value for salary: 10000
+old   2: VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary)
+new   2: VALUES(6000,'John','#115Chicago','#115Chicago','M',25,7878776,10000)
+
+1 row created.
+
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary);
+Enter value for customerid: 6001
+Enter value for customername: Jack
+Enter value for address1: #116France
+Enter value for address2: #116France
+Enter value for gender: M
+Enter value for age: 25
+Enter value for phone: 434524
+Enter value for salary: 20000
+old   2: VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary)
+new   2: VALUES(6001,'Jack','#116France','#116France','M',25,434524,20000)
+
+1 row created.
+
+SQL> INSERT INTO CustomerMaster
+  2  VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary);
+Enter value for customerid: 6002
+Enter value for customername: James
+Enter value for address1: #114NewYork
+Enter value for address2: #114NewYork
+Enter value for gender: M
+Enter value for age: 45
+Enter value for phone: 431525
+Enter value for salary: 15000.50
+old   2: VALUES(&customerid,'&customername','&address1','&address2','&gender',&age,&phone,&Salary)
+new   2: VALUES(6002,'James','#114NewYork','#114NewYork','M',45,431525,15000.50)
+
+1 row created.
+
+2. SQL> SAVEPOINT SP1;
+
+Savepoint created.
+3. SQL> INSERT INTO CustomerMaster
+  2  VALUES(6003,'John','#114 Chicago','#114 Chicago', 'M', 45,439525,19000.60);
+
+1 row created.
+
+4. SQL> ROLLBACK TO SAVEPOINT SP1;
+
+Rollback complete.
